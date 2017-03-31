@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Odběr suplování</title>
+	<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">  
+	<link href="static/style.css" rel="stylesheet">  
+	<!--<link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,400,300,600,700' rel='stylesheet' type='text/css'>-->
+	<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-MfvZlkHCEqatNoGiOXveE8FIwMzZg4W85qfrfIFBfYc= sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha256-Sk3nkD6mLTMOF0EOpNtsIry+s1CsaqQC1rVLTAy+0yc= sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+</head>
+
+<script>
+$(document).ready(function() {
+	$("#form").submit(function(event) {
+		event.preventDefault();
+
+		var formData = {
+			'name'	: $('input[name=name]').val(),
+			'email'	: $('input[name=email]').val()
+		};
+
+		$.ajax({
+			type	: 'GET',
+			url	: '/_api/subscribe',
+			data	: formData,
+			dataType: 'text'
+		})
+		.done(function(data) {
+			$(".status").css('display', 'none');
+			if(data == "Not Valid") {
+				$("#notvalid").fadeIn(750);
+			} else if(data == "Stored") {
+				$("#stored").fadeIn(750);
+				$("input[name=subscribe]").attr('disabled', 'disabled');
+			} else if(data == "Already exists") {
+				$("#alreadyexists").fadeIn(750);
+			}
+			console.log(data);
+		});
+
+	});
+});
+</script>
+
+<style>
+.status {
+	display: none;
+	text-align: center;
+}
+</style>
+
+<body>
+	<div class="modal-dialog">
+		<div class="subscribemodal-container">
+			<div id="stored" class="status">
+				<h3>Váš email byl úspěšně zaznamenán</h3>
+				<hr />
+			</div>
+			<div id="alreadyexists" class="status">
+				<h3>Tento email je již přihlášen k odběru</h3>
+				<hr />
+			</div>
+			<div id="notvalid" class="status">
+				<h3>Zadaný email je neplatný</h3>
+				<hr />
+			</div>
+
+			<h1>Přihlásit se k odběru suplování</h1><br>
+			<form id="form">
+				<input type="text" name="name" placeholder="Jméno">
+				<input type="text" name="email" placeholder="Email">
+				<input type="submit" name="subscribe" class="subscribe subscribemodal-submit" value="Potvrdit">
+			</form>
+		</div>
+	</div>
+
+</body>
+</html>

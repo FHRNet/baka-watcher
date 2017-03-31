@@ -1,0 +1,4 @@
+cron:
+- description: check
+  url: /_api/hasChanged
+  schedule: every 1 hours
