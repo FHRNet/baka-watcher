@@ -16,28 +16,24 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 
 class SendMail:
-    s = None
-
-    def __init__(self):
+    def __init__(self, email, name, html, unsub):
         # SendGrid API credentials
         s = sendgrid.SendGridClient('sg_login', 'sg_pass')
-        self.s = s
+        message = sendgrid.Mail()
 
-    def sendMail(self, email, name, html, unsub):
-		message = sendgrid.Mail()
-		# From address
-		message.set_from('skola@example.com')
-		message.add_to(email)
-		# Subject of sent emails
-		message.set_subject('Nové suplování')
-		message.add_filter('templates', 'enable', '1')
-		# SendGrid template id
-		message.add_filter('templates', 'template_id', 'xxxxx')
-		# Pass variables to template
-		message.add_substitution(':name', name)
-		message.add_substitution(':unsub', unsub)
-		message.set_html(html)
-		status, msg = self.s.send(message)
+        # From address
+        message.set_from('skola@example.com')
+        message.add_to(email)
+        # Subject of sent emails
+        message.set_subject('Nové suplování')
+        message.add_filter('templates', 'enable', '1')
+        # SendGrid template id
+        message.add_filter('templates', 'template_id', 'xxxxx')
+        # Pass variables to template
+        message.add_substitution(':name', name)
+        message.add_substitution(':unsub', unsub)
+        message.set_html(html)
+        status, msg = s.send(message)
 
 
 # Database models
@@ -51,13 +47,14 @@ class Misc(ndb.Model):
 
 
 class Main(object):
+    data = None
+
     @cherrypy.expose(['send'])
     def send(self, email, name):
-        sm = SendMail()
-        data = self.suplovani()
         # Generate unsub key
         unsub = "email=" + email + "&key=" + self.unsubKey(email)
-        sm.sendMail(email, name, data, unsub)
+
+        SendMail(email, name, self.data, unsub)
         return("OK")
 
     @cherrypy.expose(['subscribe'])
@@ -108,6 +105,10 @@ class Main(object):
         # Return with our added stuff
         return(www+"<style>"+style+" tr.tr_suplucit_3, tr.tr_abtrid_3, tr.tr_supltrid_3 { background-color: transparent !important; }</style>")
 
+    def updateSuplovani(self):
+        print("Fetching a fresh copy of data")
+        self.data = self.suplovani()
+
     def unsubKey(self, email):
         return(hashlib.sha1(email + b'MY_PRECIOUS').hexdigest()) # Unsubscribe key generator with salt
 
@@ -115,7 +116,8 @@ class Main(object):
     def hasChanged(self):
         # See if we need to update
         # Get a hash of current document
-        cur = hashlib.md5(self.suplovani()).hexdigest()
+        self.updateSuplovani()
+        cur = hashlib.md5(self.data).hexdigest()
         try:
             # No need to update
             if(Misc.query(Misc.k == "lastid").fetch().pop(0).v == cur):
@@ -125,6 +127,7 @@ class Main(object):
                 ndb.delete_multi(Misc.query(Misc.k == "lastid").fetch(keys_only=True))
                 m = Misc(k="lastid", v=cur)
                 m.put()
+                print("Sending emails")
                 self.sendToSubs()
                 return("Updated")
         except:

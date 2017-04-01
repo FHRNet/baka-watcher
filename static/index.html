@@ -17,6 +17,9 @@ $(document).ready(function() {
 	$("#form").submit(function(event) {
 		event.preventDefault();
 
+		$(".status").css('display', 'none');
+		$('input[name=subscribe]').prop('disabled', true);
+
 		var formData = {
 			'name'	: $('input[name=name]').val(),
 			'email'	: $('input[name=email]').val()
@@ -29,7 +32,6 @@ $(document).ready(function() {
 			dataType: 'text'
 		})
 		.done(function(data) {
-			$(".status").css('display', 'none');
 			if(data == "Not Valid") {
 				$("#notvalid").fadeIn(750);
 			} else if(data == "Stored") {
@@ -38,6 +40,7 @@ $(document).ready(function() {
 			} else if(data == "Already exists") {
 				$("#alreadyexists").fadeIn(750);
 			}
+			$('input[name=subscribe]').prop('disabled', false);
 			console.log(data);
 		});
 
