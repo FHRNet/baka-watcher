@@ -16,9 +16,13 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 
 class SendMail:
-    def __init__(self, email, name, html, unsub):
-        # SendGrid API credentials
-        s = sendgrid.SendGridClient('sg_login', 'sg_pass')
+    client = None
+    
+    def __init__(self):
+        self.client = sendgrid.SendGridClient('sg_login', 'sg_pass')
+
+    def send(self, email, name, html, unsub):
+        s = self.client
         message = sendgrid.Mail()
 
         # From address
@@ -34,6 +38,7 @@ class SendMail:
         message.add_substitution(':unsub', unsub)
         message.set_html(html)
         status, msg = s.send(message)
+        
 
 
 # Database models
@@ -48,13 +53,13 @@ class Misc(ndb.Model):
 
 class Main(object):
     data = None
-
+    sm = None
+    
     @cherrypy.expose(['send'])
     def send(self, email, name):
         # Generate unsub key
         unsub = "email=" + email + "&key=" + self.unsubKey(email)
-
-        SendMail(email, name, self.data, unsub)
+        self.sm.send(email, name, self.data, unsub)
         return("OK")
 
     @cherrypy.expose(['subscribe'])
@@ -91,6 +96,7 @@ class Main(object):
         # Get everyone from database
         qry = Subscribers.query().fetch()
         # Each user wants to get an email
+        self.sm = SendMail()
         for sub in qry:
             self.send(sub.email, sub.name)
         return("OK")
