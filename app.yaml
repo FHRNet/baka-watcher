@@ -1,5 +1,5 @@
-application: gbl-watcher
-version: 2
+application: baka-watcher
+version: 3
 runtime: python27
 api_version: 1
 threadsafe: true
@@ -12,7 +12,7 @@ handlers:
   script: web.app
   login: admin
 
-- url: /_api/send
+- url: /_api/clean
   script: web.app
   login: admin
 
@@ -22,4 +22,3 @@ handlers:
 - url: /(.*)
   static_files: static/index.html
   upload: static/index.html
-

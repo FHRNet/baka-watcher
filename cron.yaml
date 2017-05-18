@@ -2,3 +2,6 @@ cron:
 - description: check
   url: /_api/hasChanged
   schedule: every 1 hours
+- description: clean
+  url: /_api/clean
+  schedule: every 24 hours
