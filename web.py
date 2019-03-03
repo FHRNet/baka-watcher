@@ -163,12 +163,11 @@ class Main(object):
     @cherrypy.expose
     def clean(self):
         # We want to clean non-activated accounts after a period of time
-        qry = Subscribers.query().fetch()
+        qry = Subscribers.query(Subscribers.confirmed == False).fetch()
         for sub in qry:
-            if not sub.confirmed:
-                delta = (self.curDate() - sub.added)
-                if (delta.seconds > (86400*2)):
-                    ndb.delete_multi(Subscribers.query(Subscribers.email == sub.email).fetch(keys_only=True))
+            delta = (self.curDate() - sub.added)
+            if (delta.seconds > (86400*2)):
+                ndb.delete_multi(Subscribers.query(Subscribers.email == sub.email).fetch(keys_only=True))
 
     @cherrypy.expose
     def hasChanged(self):
